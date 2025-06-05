@@ -18,10 +18,10 @@ return new class extends Migration
             $table->string('title',255)->nullable(false);//カリキュラムタイトル
             $table->string('thumbnail',255)->nullable();//カリキュラムサムネイル
             $table->longText('description')->nullable();//カリキュラム説明文
-            $table->midiumText('video_url')->nullable();//動画URL
-            $table->tinyInteger('alway_delivery_flg',4)->nullable(false);//常時公開フラグ
-            $table->unsignedInteger('grade_id')->nullable(false);;//クラスID,grades テーブルのidと紐づく
-            $table->timestamps()->nullable(false);;//created_at,updated_at
+            $table->mediumText('video_url')->nullable();//動画URL
+            $table->tinyInteger('alway_delivery_flg')->default(0); //常時公開フラグ
+            $table->unsignedInteger('grade_id')->nullable(false);//クラスID,grades テーブルのidと紐づく
+            $table->timestamps();//created_at,updated_at
         });
     }
 

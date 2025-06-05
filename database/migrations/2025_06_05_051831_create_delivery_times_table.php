@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('curriculums_id')->nullable(false);//カリキュラムid,curriculumsテーブルのidと紐づく
             $table->dateTime('delivery_from')->nullable(false);//公開開始日
             $table->dateTime('delivery_to')->nullable(false);//公開終了日
-            $table->timestamps()->nullable(false);//created_at,updated_at	
+            $table->timestamps();//created_at,updated_at	
         });
     }
 
