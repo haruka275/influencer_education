@@ -25,7 +25,16 @@ class LoginController extends Controller
      *
      * @var string
      */
+    // この行は任意（下の redirectTo() が優先される）
     protected $redirectTo = '/home';
+
+    /**
+     * 管理者ログイン後の遷移先を指定（自動で呼ばれる）
+     */
+    protected function redirectTo()
+    {
+        return '/admin/notice'; // ここを任意で変更可能
+    }
 
     /**
      * Create a new controller instance.

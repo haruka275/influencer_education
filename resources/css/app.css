@@ -1,0 +1,87 @@
+/* 共通：ボタン用スタイル */
+.user-button {
+    display: inline-block;
+    background-color: #00aaff; /* 水色 */
+    color: #fff; /* 白文字 */
+    padding: 0.5rem 1rem;
+    margin-right: 10px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+/* ヘッダー：全体レイアウト */
+.user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ff4d4d; /* 赤背景 */
+    padding: 10px 20px;
+}
+
+/* ナビゲーション左側 */
+.nav-left a {
+    margin-right: 10px;
+}
+
+/* ナビゲーション右側（ログアウト） */
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+.logout-text {
+    color: #000; /* 黒文字 */
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.logout-dots {
+    color: #000;
+    font-size: 1.2rem;
+    margin-left: 5px;
+}
+
+/* 戻るリンク */
+.user-back-link {
+    display: block;
+    margin-top: 1rem;
+    margin-left: 0;
+    font-size: 1rem;
+    color: #000;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* お知らせコンテナ全体 */
+.user-notice-container {
+    padding: 2rem;
+    background-color: #f9f9f9;
+}
+
+/* 日付表示 */
+.user-notice-date {
+    font-size: 1rem;
+    margin-top: 1rem;
+}
+
+/* タイトル表示 */
+.user-notice-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+/* 本文表示用 textarea（読み取り専用） */
+.user-notice-textarea {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    color: #333;
+    height: 300px; /* 表示エリアの高さ調整 */
+}
