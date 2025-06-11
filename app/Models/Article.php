@@ -11,13 +11,15 @@ class Article extends Model
 
     protected $fillable = [
         'title',
-        'body',
-        'user_flag',
+        'article_contents',
+        'posted_date',
         'start_date',
         'end_date',
+        'user_flag',
     ];
 
     protected $dates = [
+        'posted_date',
         'start_date',
         'end_date',
     ];

@@ -25,17 +25,17 @@
 
     {{-- →戻るリンク --}}
     <div class="mb-3">
-        <a href="{{ route('user.notice.show', ['id' => $article->id]) }}" class="text-dark" style="text-decoration: none;">→戻る</a>
+        <a href="{{ route('user.notice.index') }}" class="text-dark" style="text-decoration: none;">→戻る</a>
     </div>
 
-    {{-- 日付 --}}
+    {{-- 公開開始日（未設定対応のみ） --}}
     <p class="text-muted">
-        {{ $article->start_date->format('Y年m月d日') }}
+        {{ $article->start_date ? $article->start_date->format('Y年m月d日') : '未設定' }}
     </p>
 
-    {{-- ラベルのみ表示 --}}
+    {{-- タイトル --}}
     <div class="mb-3">
-        <h2 class="fw-bold">おしらせタイトル</h2>
+        <h2 class="fw-bold">{{ $article->title }}</h2>
     </div>
 
     {{-- 本文 --}}

@@ -9,7 +9,7 @@
         <button class="nav-button" style="background-color: #808080; color: #FFFFFF; margin-right: 10px;">お知らせ管理</button>
         <button class="nav-button" style="background-color: #808080; color: #FFFFFF; margin-right: auto;">バナー管理</button>
         <span style="color: #FFFFFF; margin-right: 10px; cursor: pointer;">ログアウト</span>
-        <div class="menu-icon" style="font-size: 24px; color: #FFFFFF;">⋮</div>
+        
     </div>
 
     {{-- 戻るリンク --}}
@@ -40,7 +40,9 @@
             <tbody>
                 @foreach ($articles as $article)
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #CCCCCC;">{{ $article->created_at->format('Y年m月d日') }}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #CCCCCC;">
+                        {{ $article->posted_date ? \Carbon\Carbon::parse($article->posted_date)->format('Y年m月d日') : '未設定' }}
+                        </td>
                         <td style="padding: 10px; border-bottom: 1px solid #CCCCCC;">{{ $article->title }}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #CCCCCC;">
                             <a href="{{ route('admin.notice.edit', $article->id) }}" class="btn btn-warning btn-sm" style="background-color: #ADD8E6; color: #FFFFFF; padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-right: 5px;">変更する</a>

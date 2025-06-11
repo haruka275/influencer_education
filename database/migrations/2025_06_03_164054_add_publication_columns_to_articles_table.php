@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('articles', function (Blueprint $table) {
             if (!Schema::hasColumn('articles', 'start_date')) {
-                $table->dateTime('start_date')->nullable()->after('body');
+                $table->dateTime('start_date')->nullable()->after('article_contents');
             }
 
             if (!Schema::hasColumn('articles', 'end_date')) {

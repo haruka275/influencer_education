@@ -15,30 +15,33 @@ class ArticlesTableSeeder extends Seeder
         $articles = [
             [
                 'title' => '初めてのお知らせ',
-                'body' => 'これは最初のお知らせです。',
-                'start_date' => $now->subDay()->toDateTimeString(),
-                'end_date' => $now->copy()->addDays(7)->toDateTimeString(),
+                'article_contents' => 'これは最初のお知らせです。',
+                'start_date' => $now->copy()->subDay()->toDateTimeString(),         // 昨日
+                'end_date' => $now->copy()->addDays(7)->toDateTimeString(),        // 7日後
                 'user_flag' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
+                'posted_date' => $now->copy()->subDay()->toDateTimeString(),       // 昨日
+                'created_at' => $now->copy(),
+                'updated_at' => $now->copy(),
             ],
             [
                 'title' => '重要なお知らせ',
-                'body' => 'パスワード変更が必要です。',
-                'start_date' => $now->copy()->subDays(2)->toDateTimeString(),
-                'end_date' => $now->copy()->addDays(5)->toDateTimeString(),
+                'article_contents' => 'パスワード変更が必要です。',
+                'start_date' => $now->copy()->subDays(2)->toDateTimeString(),      // 2日前
+                'end_date' => $now->copy()->addDays(5)->toDateTimeString(),        // 5日後
                 'user_flag' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
+                'posted_date' => $now->copy()->subDays(2)->toDateTimeString(),     // 2日前
+                'created_at' => $now->copy(),
+                'updated_at' => $now->copy(),
             ],
             [
                 'title' => '管理者限定のお知らせ',
-                'body' => 'これはユーザーには非公開です。',
-                'start_date' => $now->copy()->subDay()->toDateTimeString(),
-                'end_date' => $now->copy()->addDays(3)->toDateTimeString(),
+                'article_contents' => 'これはユーザーには非公開です。',
+                'start_date' => $now->copy()->subDay()->toDateTimeString(),        // 昨日
+                'end_date' => $now->copy()->addDays(3)->toDateTimeString(),        // 3日後
                 'user_flag' => 0,
-                'created_at' => $now,
-                'updated_at' => $now,
+                'posted_date' => $now->copy()->subDay()->toDateTimeString(),       // 昨日
+                'created_at' => $now->copy(),
+                'updated_at' => $now->copy(),
             ],
         ];
 
