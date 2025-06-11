@@ -20,5 +20,14 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+        // 必要なSeederだけ呼び出す（必要に応じて変更可）
+        $this->call([
+            ArticlesTableSeeder::class,
+            GradeSeeder::class,
+            UserSeeder::class,
+            CurriculumSeeder::class,
+            CurriculumProgressSeeder::class, 
+        ]);
     }
 }
