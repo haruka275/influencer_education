@@ -34,6 +34,7 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('notice', [AdminNoticeController::class, 'index'])->name('notice.index');
     Route::get('notice/create', [AdminNoticeController::class, 'create'])->name('notice.create');
+    Route::post('notice', [AdminNoticeController::class, 'store'])->name('notice.store');
     Route::get('notice/{id}/edit', [AdminNoticeController::class, 'edit'])->name('notice.edit');
     Route::put('notice/{id}', [AdminNoticeController::class, 'update'])->name('notice.update');
     Route::delete('notice/{id}', [AdminNoticeController::class, 'destroy'])->name('notice.destroy');

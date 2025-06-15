@@ -106,31 +106,18 @@
     <div class="user-info">
         <img src="{{ $user->profile_image_url ?? asset('default-user.png') }}" alt="ユーザー画像">
         <div>
-            <h2>テストユーザーの授業進捗</h2>
+            <h2>{{ $user->name }}の授業進捗</h2>
             <p>現在の学年：
-                <button class="grade-button grade-primary">小学校1年生</button>
+                <button class="grade-button {{ config('grades.grade_classes')[$user->grade->name] ?? 'grade-primary' }}">
+                    {{ $user->grade->name }}
+                </button>
             </p>
         </div>
     </div>
 
     @php
-    $grades = [
-        '小学校1年生' => 'grade-primary',
-        '小学校2年生' => 'grade-primary',
-        '小学校3年生' => 'grade-primary',
-        '小学校4年生' => 'grade-primary',
-        '小学校5年生' => 'grade-primary',
-        '小学校6年生' => 'grade-primary',
-        '中学校1年生' => 'grade-secondary',
-        '中学校2年生' => 'grade-secondary',
-        '中学校3年生' => 'grade-secondary',
-        '高校1年生' => 'grade-high',
-        '高校2年生' => 'grade-high',
-        '高校3年生' => 'grade-high',
-    ];
-
-    // 3列でグリッド表示するため、学年を3つずつグループ化
-    $gradeChunks = array_chunk($grades, 3, true);
+        $gradeClasses = config('grades.grade_classes'); // configから取得
+        $gradeChunks = array_chunk($gradeClasses, 3, true);
     @endphp
 
     @foreach ($gradeChunks as $gradeRow)
@@ -139,36 +126,30 @@
                 <div class="grade-section">
                     <button class="grade-button {{ $gradeClass }}">{{ $gradeName }}</button>
                     <div>
+                        @php $itemCount = 0; @endphp
                         @if (isset($curriculums_by_grade[$gradeName]))
-                            {{-- 実際のデータが存在する場合（小学校1年生など） --}}
-                            @php $itemCount = 0; @endphp
                             @foreach ($curriculums_by_grade[$gradeName] as $curriculum)
                                 @php
-                                    $canAccess = $curriculum->grade_id <= $user->grade_id;
                                     $itemCount++;
-                                    // 授業タイトルを統一形式に変更
-                                    $cleanTitle = "授業タイトル{$itemCount}";
+                                    $canAccess = $curriculum->grade_id <= $user->grade_id;
+                                    $cleanTitle = $curriculum->title; // Blade内で生成しない
+                                    $progress = $curriculum->progress;
                                 @endphp
                                 <div class="curriculum-item">
-                                    {{-- サムネ画像 --}}
-                                    <img src="{{ asset('storage/' . $curriculum->thumbnail) }}"
-                                         alt="サムネイル">
+                                    <img src="{{ asset('storage/' . $curriculum->thumbnail) }}" alt="サムネイル">
 
-                                    {{-- 授業タイトル（リンク or 非アクティブ表示） --}}
                                     @if ($canAccess)
-                                        <span class="curriculum-title">{{ $cleanTitle }}</span>
+                                        <a href="#" class="curriculum-title">{{ $cleanTitle }}</a>
                                     @else
                                         <span class="curriculum-title disabled">{{ $cleanTitle }}</span>
                                     @endif
 
-                                    {{-- 受講済み表示 --}}
-                                    @if (optional($curriculum->progress->first())->clear_flg === 1)
+                                    @if ($progress && $progress->clear_flg)
                                         <span class="completed-badge">受講済み</span>
                                     @endif
                                 </div>
                             @endforeach
-                            
-                            {{-- 5つに満たない場合は残りをプレースホルダーで埋める --}}
+
                             @for ($i = $itemCount + 1; $i <= 5; $i++)
                                 <div class="curriculum-item">
                                     <img src="{{ asset('default-thumbnail.png') }}" alt="サムネイル">
@@ -176,7 +157,6 @@
                                 </div>
                             @endfor
                         @else
-                            {{-- データが存在しない場合のプレースホルダー --}}
                             @for ($i = 1; $i <= 5; $i++)
                                 <div class="curriculum-item">
                                     <img src="{{ asset('default-thumbnail.png') }}" alt="サムネイル">

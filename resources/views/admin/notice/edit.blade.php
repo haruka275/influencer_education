@@ -89,7 +89,8 @@
 
             <div class="mb-3">
                 <label for="posted_date" class="form-label">投稿日時</label>
-                <input type="text" name="posted_date" id="posted_date" class="form-control" value="{{ old('posted_date', $article->posted_date) }}">
+                <input type="datetime-local" name="posted_date" id="posted_date" class="form-control"
+                value="{{ old('posted_date', \Carbon\Carbon::parse($article->posted_date)->format('Y-m-d\TH:i')) }}">
             </div>
 
             <div class="mb-3">

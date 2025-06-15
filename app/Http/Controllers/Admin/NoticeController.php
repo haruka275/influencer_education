@@ -5,22 +5,41 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Article;
+use App\Http\Requests\Admin\StoreNoticeRequest;
+use App\Http\Requests\Admin\UpdateNoticeRequest;
 
 class NoticeController extends Controller
 {
+    // 一覧画面
     public function index()
     {
         // 管理者向け：全記事取得（公開期間などの制限なし）
-        $articles = Article::orderBy('start_date', 'desc')->get();
+        $articles = Article::orderBy('posted_date', 'desc')->get();
 
         return view('admin.notice.index', compact('articles'));
     }
 
+    // 新規作成画面
     public function create()
     {
         return view('admin.notice.create');
     }
 
+    // 保存処理
+    public function store(StoreNoticeRequest $request)
+    {
+        $validated = $request->validated();
+
+        Article::create([
+            'title' => $validated['title'],
+            'posted_date' => $validated['posted_date'],
+            'article_contents' => $validated['article_contents'],
+        ]);
+
+        return redirect()->route('admin.notice.index')->with('success', 'お知らせを登録しました');
+    }
+
+    // 編集画面表示
     public function edit($id)
     {
         $article = Article::findOrFail($id);
@@ -28,28 +47,18 @@ class NoticeController extends Controller
         return view('admin.notice.edit', compact('article'));
     }
 
-    public function update(Request $request, $id)
+    // 更新処理（←ここが今回の修正ポイント）
+    public function update(UpdateNoticeRequest $request, $id)
     {
-        // バリデーション
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'posted_date' => 'required|date_format:Y-m-d H:i',
-            'article_contents' => 'required|string',
-        ]);
-
-        // 対象記事を取得
         $article = Article::findOrFail($id);
 
-        // 更新
-        $article->update([
-            'title' => $validated['title'],
-            'posted_date' => $validated['posted_date'],
-            'article_contents' => $validated['article_contents'],
-        ]);
+        // モデル内メソッドで更新処理
+        $article->updateArticle($request->validated());
 
         return redirect()->route('admin.notice.index')->with('success', 'お知らせを更新しました');
     }
 
+    // 削除処理
     public function destroy($id)
     {
         $article = Article::findOrFail($id);

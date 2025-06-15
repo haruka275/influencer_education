@@ -30,7 +30,7 @@
 
     {{-- 公開開始日（未設定対応のみ） --}}
     <p class="text-muted">
-        {{ $article->start_date ? $article->start_date->format('Y年m月d日') : '未設定' }}
+    {{ $article->posted_date ? \Carbon\Carbon::parse($article->posted_date)->format('Y年m月d日') : '未設定' }}
     </p>
 
     {{-- タイトル --}}
@@ -39,7 +39,7 @@
     </div>
 
     {{-- 本文 --}}
-    <textarea class="form-control" rows="12" readonly>{{ $article->body }}</textarea>
+    <textarea class="form-control" rows="12" readonly>{{ $article->article_contents }}</textarea>
 
 </div>
 @endsection

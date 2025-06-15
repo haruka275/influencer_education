@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use App\Http\Requests\User\UpdateProfileRequest;
 
 class ProfileController extends Controller
 {
@@ -22,42 +21,9 @@ class ProfileController extends Controller
     /**
      * プロフィール更新処理
      */
-    public function update(Request $request)
+    public function update(UpdateProfileRequest $request)
     {
         $user = Auth::user();
-
-        // 入力バリデーション
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'name_kana' => ['required', 'string', 'max:255', 'regex:/^[ァ-ヶー　]+$/u'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
-            'current_password' => ['required', 'string'],
-            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
-        ],
-        [
-            'name.required' => '名前は必須です。',
-            'name.max' => '名前は255文字以内で入力してください。',
-            'name_kana.required' => 'カナは必須です。',
-            'name_kana.max' => 'カナは255文字以内で入力してください。',
-            'name_kana.regex' => 'カナは全角カタカナで入力してください。',
-            'email.required' => 'メールアドレスは必須です。',
-            'email.email' => 'メールアドレスの形式が正しくありません。',
-            'email.max' => 'メールアドレスは255文字以内で入力してください。',
-            'email.unique' => 'このメールアドレスは既に使用されています。',
-            'profile_image.image' => '画像ファイルを選択してください。',
-            'profile_image.mimes' => '画像はjpgまたはpng形式である必要があります。',
-            'profile_image.max' => '画像サイズは2MB以内にしてください。',
-            'current_password.required' => '現在のパスワードを入力してください。',
-            'new_password.required' => '新しいパスワードを入力してください。',
-            'new_password.min' => 'パスワードは8文字以上で入力してください。',
-            'new_password.confirmed' => '新しいパスワードが一致しません。',
-        ]);
 
         // 現在のパスワードが一致するか確認
         if (!Hash::check($request->input('current_password'), $user->password)) {
@@ -73,10 +39,12 @@ class ProfileController extends Controller
         }
 
         // データを更新
-        $user->name = $validated['name'];
-        $user->name_kana = $validated['name_kana'];
-        $user->email = $validated['email'];
-        $user->password = Hash::make($validated['new_password']);
+        $user->name = $request->input('name');
+        $user->name_kana = $request->input('name_kana');
+        $user->email = $request->input('email');
+        if ($request->filled('new_password')) {
+            $user->password = Hash::make($request->input('new_password'));
+        }
         $user->save();
 
         return redirect()->route('user.profile.edit')->with('success', 'プロフィールを更新しました。');

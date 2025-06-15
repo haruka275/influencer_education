@@ -80,17 +80,32 @@
             <input type="email" id="email" name="email" class="form-control" value="{{ old('email', $user->email) }}">
         </div>
 
+        {{-- 現在のパスワード --}}
+        <div class="mb-3 d-flex align-items-center">
+            <label for="current_password" class="form-label me-3" style="min-width: 120px;">現在のパスワード</label>
+            <input type="password" id="current_password" name="current_password" class="form-control" placeholder="現在のパスワードを入力">
+        </div>
+        @error('current_password')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
+
         {{-- パスワード --}}
         <div class="mb-3 d-flex align-items-center">
-            <label for="password" class="form-label me-3" style="min-width: 120px;">パスワード</label>
-            <input type="password" id="password" name="password" class="form-control" placeholder="パスワードを変更する">
+           <label for="new_password" class="form-label me-3" style="min-width: 120px;">パスワード</label>
+           <input type="password" id="new_password" name="new_password" class="form-control" placeholder="パスワードを変更する">
         </div>
+        @error('new_password')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
 
         {{-- パスワード確認 --}}
         <div class="mb-4 d-flex align-items-center">
-            <label for="password_confirmation" class="form-label me-3" style="min-width: 120px;">パスワード確認</label>
-            <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" placeholder="もう一度入力">
+           <label for="new_password_confirmation" class="form-label me-3" style="min-width: 120px;">パスワード確認</label>
+           <input type="password" id="new_password_confirmation" name="new_password_confirmation" class="form-control" placeholder="もう一度入力">
         </div>
+        @error('new_password_confirmation')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
 
         {{-- 登録ボタン --}}
         <div class="text-center">

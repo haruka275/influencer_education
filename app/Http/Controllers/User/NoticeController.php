@@ -13,11 +13,7 @@ class NoticeController extends Controller
     {
         $now = Carbon::now();
 
-        $articles = Article::where('user_flag', 1)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->orderBy('start_date', 'desc')
-            ->get();
+        $articles = Article::orderBy('posted_date', 'desc')->get();
 
         return view('user.notice.index', compact('articles'));
     }
@@ -26,11 +22,7 @@ class NoticeController extends Controller
     {
         $now = Carbon::now();
 
-        $article = Article::where('id', $id)
-            ->where('user_flag', 1)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->firstOrFail();
+        $article = Article::findOrFail($id);
 
         return view('user.notice.show', compact('article'));
     }

@@ -23,4 +23,13 @@ class Article extends Model
         'start_date',
         'end_date',
     ];
+
+    public function updateArticle(array $data): void
+   {
+    $this->update([
+        'title' => $data['title'],
+        'posted_date' => $data['posted_date'],
+        'article_contents' => $data['article_contents'],
+    ]);
+    }
 }

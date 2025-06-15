@@ -1,39 +1,67 @@
-
-<!-- 表示イメージに合わせてBladeファイル全体修正版 -->
-
-<!-- resources/views/user/progress/show.blade.php -->
-
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2 class="text-xl font-bold mb-4">現在の学年： 小学校1年生 年生</h2>
+    <!-- 赤背景ヘッダー -->
+    <div class="bg-red-500 p-4 flex justify-between items-center text-white">
+        <div class="space-x-4">
+            <a href="{{ route('user.schedule') }}" class="bg-sky-400 px-4 py-2 rounded text-white">時間割り</a>
+            <a href="{{ route('user.progress') }}" class="bg-sky-400 px-4 py-2 rounded text-white">授業進捗</a>
+            <a href="{{ route('user.profile') }}" class="bg-sky-400 px-4 py-2 rounded text-white">プロフィール設定</a>
+        </div>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button class="text-black">ログアウト</button>
+        </form>
+    </div>
 
-    <!-- 学年ごとの授業ブロック -->
-    @php
-        $grades = [
-            '小学校1年生', '小学校2年生', '小学校3年生',
-            '小学校4年生', '小学校5年生', '小学校6年生',
-            '中学校1年生', '中学校2年生', '中学校3年生',
-            '高校1年生', '高校2年生', '高校3年生'
-        ];
-    @endphp
+    <!-- 白背景エリア -->
+    <div class="bg-white p-6">
+        <a href="{{ url()->previous() }}" class="text-blue-500 underline">← 戻る</a>
 
-    @foreach (array_chunk($grades, 3) as $gradeGroup)
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            @foreach ($gradeGroup as $grade)
-                <div class="bg-white rounded-lg shadow p-4">
-                    <button class="bg-blue-500 text-white px-4 py-2 rounded mb-4 w-full">
-                        {{ $grade }}（ボタン）
-                    </button>
-                    <ul class="list-disc pl-5">
-                        @for ($i = 1; $i <= 5; $i++)
-                            <li>授業タイトル{{ $i }}</li>
-                        @endfor
+        <!-- ユーザー名・学年 -->
+        <div class="my-4 flex items-center space-x-4">
+            <img src="{{ asset('storage/' . ($user->profile_img ?? 'default.png')) }}" alt="プロフィール画像" class="w-12 h-12 rounded-full">
+            <div class="text-xl font-semibold">{{ $user->name }}の授業進捗</div>
+        </div>
+        <div class="mb-6">
+            現在の学年：
+            <button class="bg-sky-300 text-white px-3 py-1 rounded">
+                {{ $currentGradeName }}
+            </button>
+        </div>
+
+        <!-- 学年別授業一覧 -->
+        <div class="space-y-8">
+            @foreach ($groupedCurriculums as $gradeName => $curriculums)
+                <div>
+                    <h2 class="text-lg font-bold mb-2">
+                        <button class="{{ $gradeLabels[$gradeName] ?? 'bg-gray-300' }} text-white px-4 py-2 rounded">
+                            {{ $gradeName }}
+                        </button>
+                    </h2>
+                    <ul class="space-y-1 pl-4">
+                        @foreach ($curriculums as $curriculum)
+                            @php
+                                $canAccess = $curriculum->grade_id <= $user->grade_id;
+                                $isCleared = $curriculum->progress->first()?->clear_flg == 1;
+                            @endphp
+                            <li>
+                                @if ($canAccess)
+                                    <a href="{{ route('user.curriculum.show', $curriculum->id) }}" class="text-blue-600 hover:underline inline-block">
+                                        {{ $curriculum->title }}
+                                    </a>
+                                @else
+                                    <span class="text-gray-400">{{ $curriculum->title }}</span>
+                                @endif
+
+                                @if ($isCleared)
+                                    <span class="ml-2 text-green-500 text-sm">受講済み</span>
+                                @endif
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
             @endforeach
         </div>
-    @endforeach
-</div>
+    </div>
 @endsection

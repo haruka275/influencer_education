@@ -11,29 +11,26 @@ class CurriculumProgressController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $userGradeId = $user->grade_id;
 
-        // ユーザーの学年以下のカリキュラムを取得
+        // 全カリキュラムを取得（←ここが講師の指摘対応）
         $curriculums = Curriculum::with([
             'grade',
             'progress' => function ($query) use ($user) {
                 $query->where('user_id', $user->id);  // 自分の進捗のみ
             }
         ])
-        ->where('grade_id', '<=', $userGradeId)
-        ->orderBy('grade_id')        // 学年順
-        ->orderBy('id')              // カリキュラム順（任意）
+        ->orderBy('grade_id') // 学年順
+        ->orderBy('id')       // 任意：ID順
         ->get();
 
-        // 学年ごとにグルーピング（Bladeでループしやすくする）
+        // Bladeで使いやすいように学年ごとにグループ化
         $curriculums_by_grade = $curriculums->groupBy(function ($curriculum) {
             return $curriculum->grade->name ?? '未分類';
         });
 
         return view('user.curriculum_progress.index', compact(
             'curriculums_by_grade',
-            'user',
-            'userGradeId'
+            'user'
         ));
     }
 }
