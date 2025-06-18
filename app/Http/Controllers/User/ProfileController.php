@@ -5,7 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\User\UpdateProfileRequest;
+use App\Http\Requests\User\UserUpdateProfileRequest;
 
 class ProfileController extends Controller
 {
@@ -21,7 +21,7 @@ class ProfileController extends Controller
     /**
      * プロフィール更新処理
      */
-    public function update(UpdateProfileRequest $request)
+    public function update(UserUpdateProfileRequest $request)
     {
         $user = Auth::user();
 

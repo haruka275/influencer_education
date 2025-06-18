@@ -36,6 +36,15 @@
     .grade-primary { background-color: #87CEFA; }
     .grade-secondary { background-color: #4682B4; }
     .grade-high { background-color: #90EE90; }
+    .grade-junior {
+    background-color: #FDBA74; /* 薄いオレンジ */
+    color: white;
+    }
+
+    .grade-senior {
+    background-color: #FDE68A; /* 薄い黄色 */
+    color: white;
+    }
     .user-info {
         display: flex;
         align-items: center;
