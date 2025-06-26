@@ -17,21 +17,6 @@
 
                 {{-- 月切り替え --}}
                 <div class="month" id="month-switcher">
-                    
-                    @php // ここに普通のPHPコードを書ける
-                        $gradeId = $selectedGrade->id; // 「今選ばれている学年のIDだけを $gradeId に取り出して使えるようにする」 $selectedGrade は「選択されている学年の情報を持ったオブジェクト」
-                
-                        if ($gradeId >= 1 && $gradeId <= 6) {
-                            $selectedColorGroup = 1; // $gradeIdが1〜6のとき → 色グループ1を選ぶ
-                        } elseif ($gradeId >= 7 && $gradeId <= 9) {
-                            $selectedColorGroup = 2; // $gradeIdが7〜9のとき → 色グループ2を選ぶ
-                        } elseif ($gradeId >= 10 && $gradeId <= 12) {
-                            $selectedColorGroup = 3; // $gradeIdが10〜12のとき → 色グループ3を選ぶ
-                        } else {
-                            $selectedColorGroup = 1; // デフォルト
-                        }
-                        $selectedColorClass = 'grade-color-' . $selectedColorGroup; // grade-color-1,2,3
-                    @endphp
 
                     <a href="#" class="month-nav" data-month="{{ $prevMonth }}">◀</a>
                     <h4 style="margin: 0;">
@@ -49,27 +34,12 @@
                 <div class="curriculum_list-grade">
 
                     <ul>
-                        @foreach($grades as $index => $grade)
-                            @php
-                                if ($index <= 5) {   // 0〜5 → 6学年分
-                                    $colorGroup = 1;
-                                } elseif ($index <= 8) { // 6〜8 → 3学年分
-                                    $colorGroup = 2;
-                                } else {  // 9以降 → 3学年分
-                                    $colorGroup = 3;
-                                }
-                                $colorClass = 'grade-color-' . $colorGroup;
-
-                                // $activeGradeIds は、アクティブ（選択されている）学年のIDをまとめた配列
-                                // in_array($grade->id, $activeGradeIds) で、今の学年がアクティブならtrue、そうでなければfalseを返す。
-                                $isActive = in_array($grade->id, $activeGradeIds); // // $activeGradeIds配列の中に今の学年IDがあるかどうかを調べている
-                            @endphp
-
+                        @foreach($grades as $grade)
                             <li>
                                 <a href="#"
-                                    class="grade-link {{ $isActive ? $colorClass : 'disabled' }}"
+                                    class="grade-link {{ in_array($grade->id, $activeGradeIds) ? $grade->colorClass : 'disabled' }}"
                                     data-grade-id="{{ $grade->id }}"
-                                    data-color-class="{{ $colorClass }}">
+                                    data-color-class="{{ $grade->colorClass }}">
                                     {{ $grade->name }}
                                 </a>
                             </li>

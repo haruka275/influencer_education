@@ -11,141 +11,239 @@ use Carbon\Carbon;
 
 class CurriculumController extends Controller
 {
-    //public：他のクラスやコントローラーからも呼び出せる
-    //function showCurriculumList():showCurriculumList という名前の関数（メソッド）を定義
-    //カリキュラム一覧ページを表示する処理 コントローラーから変数を渡す
-    public function showCurriculumList(Request $request)
+    //定数定義（マジックナンバーの代わり） private:このクラス内のみで使用　const 定数:定数の宣言
+    private const COLOR_GROUP_LOW = 1; //小学生
+    private const COLOR_GROUP_MID = 2; //中学生
+    private const COLOR_GROUP_HIGH = 3; //高校生
+
+    //学年一覧取得
+    private function getGrades()
     {
-        //学年一覧取得
-        $grades = Grade::all();
+        //昇順
+        return Grade::orderBy('id')->get();
+    }
 
-        // --- 仮のデータ：学年ごとのカリキュラムクリア状況（ユーザー単位で取得する）---
-        // 例えば下記のような形式で取得している想定（Grade ID => クリア済みかどうか）
-        $clearedCurriculumsByGrade = [
-            1 => true,
-            2 => true,
-            3 => false,
-            4 => false,
+    //ログインユーザーの学年ID取得
+    private function getUserGradeId(): ?int
+    {
+        return auth()->user()->grade_id ?? null;
+    }
+
+    //学年IDに応じた色グループを返すメソッド
+    private function getColorGroupByGradeId(int $gradeId): int 
+    {
+
+        if ($gradeId >= 1 && $gradeId <= 6) {
+            return self::COLOR_GROUP_LOW;
+        } elseif ($gradeId >= 7 && $gradeId <= 9) {
+            return self::COLOR_GROUP_MID;
+        } elseif ($gradeId >= 10 && $gradeId <= 12) {
+            return self::COLOR_GROUP_HIGH;
+        } else {
+            return self::COLOR_GROUP_LOW; // デフォルト（小学生）
+        }
+    }
+
+    //前後月と月初・月末を含む配列を返す
+    private function getMonthBoundaries(Carbon $month): array
+    {
+        return [
+            'start' => $month->copy()->startOfMonth(),
+            'end' => $month->copy()->endOfMonth(),
+            'prev' => $month->copy()->subMonth()->format('Y-m'),
+            'next' => $month->copy()->addMonth()->format('Y-m'),
         ];
+    }
 
-        /*全学年を活性化（全IDを配列に入れる）
-        $activeGradeIds = $grades->pluck('id')->toArray();
-        */
-
+    //ログインユーザーの学年までをアクティブにしたID配列を返す
+    private function getActiveGradeIds($grades, $userGradeId):array
+    {
         // アクティブ化する学年IDを初期化
         $activeGradeIds = [];
 
-        // ロジック：連続するクリア済み学年＋次の学年を1つだけ活性化
-        $addedCurrent = false;
-
-        foreach ($grades as $grade) {
-            $gradeId = $grade->id;
-
-            if (isset($clearedCurriculumsByGrade[$gradeId]) && $clearedCurriculumsByGrade[$gradeId]) {
-                $activeGradeIds[] = $gradeId; // クリア済み学年は活性
-            } elseif (!$addedCurrent) {
-                $activeGradeIds[] = $gradeId; // 最初の未クリア学年が「現在の学年」になる
-                $addedCurrent = true;
-            } else {
-                break; // それ以降は非活性（グレーアウト）
+        if ($userGradeId === null) {
+            // ユーザーの学年未設定なら一番下の学年だけアクティブにする
+            if ($grades->isNotEmpty()) {
+                $activeGradeIds[] = $grades->first()->id;
+            }
+        } else {
+            // ユーザーの学年以下の学年をすべてアクティブにする
+            foreach ($grades as $grade) {
+                if ($grade->id <= $userGradeId) {
+                    $activeGradeIds[] = $grade->id;
+                } else {
+                    break;
+                }
             }
         }
 
-        // クエリパラメータから学年IDを取得（未指定なら最初の active 学年）
-        $selectedGradeId = $request->input('grade_id') ?? $activeGradeIds[0] ?? $grades->first()?->id;
-        $selectedGrade = Grade::find($selectedGradeId);
-
-        // 月の処理
-        $displayMonth = $request->input('month')
-            ? Carbon::parse($request->input('month'))
-            : Carbon::now();
-
-        $startOfMonth = $displayMonth->copy()->startOfMonth();
-        $endOfMonth = $displayMonth->copy()->endOfMonth();
-
-        // ◀▶に必要な月も定義
-        $prevMonth = $displayMonth->copy()->subMonth()->format('Y-m');
-        $nextMonth = $displayMonth->copy()->addMonth()->format('Y-m');
-
-
-        // カリキュラム取得（学年＋配信期間条件）
-        $curriculums = Curriculum::with('deliveryTime')
-            ->where('grade_id', $selectedGradeId)
-            ->where(function ($query) use ($startOfMonth, $endOfMonth) {
-                $query->where('alway_delivery_flg', true)
-                    ->orWhereHas('deliveryTime', function ($q) use ($startOfMonth, $endOfMonth) {
-                        $q->whereBetween('delivery_from', [$startOfMonth, $endOfMonth])
-                            ->orWhereBetween('delivery_to', [$startOfMonth, $endOfMonth]);
-                    });
-            })
-            ->get();
-
-        // 全配信時間（今後の処理で使うなら）
-        $delivery_times = DeliveryTime::all();
-
-        // ↓ここから色クラス計算を入れる
-        $gradeId = $selectedGrade->id;
-        if ($gradeId >= 1 && $gradeId <= 6) {
-            $selectedColorGroup = 1;
-        } elseif ($gradeId >= 7 && $gradeId <= 9) {
-            $selectedColorGroup = 2;
-        } elseif ($gradeId >= 10 && $gradeId <= 12) {
-            $selectedColorGroup = 3;
-        } else {
-            $selectedColorGroup = 1;
-        }
-        $selectedColorClass = 'grade-color-' . $selectedColorGroup;
-
-        return view('user.curriculum_list', compact(
-            'displayMonth', 'grades', 'curriculums', 'delivery_times',
-            'selectedGrade', 'activeGradeIds', 'prevMonth', 'nextMonth', 'selectedColorClass'
-        ));
+        return $activeGradeIds;
     }
-    public function showCurriculumListPartial(Request $request)
+
+    //学年の選択
+    private function getSelectedGrade($grades, $activeGradeIds, ?int $gradeIdFromRequest): ?Grade
+    {
+        // クエリパラメータから学年IDを取得（未指定なら最初の active 学年）
+         $selectedGradeId = $gradeIdFromRequest ?? $activeGradeIds[0] ?? $grades->first()?->id;
+         return Grade::find($selectedGradeId);
+    }
+
+    //月の処理
+    private function getDisplayMonthData(?string $monthStr): array
+    {
+        $displayMonth = $monthStr ? Carbon::parse($monthStr) : Carbon::now();
+        $monthData = $this->getMonthBoundaries($displayMonth);
+        return array_merge(['displayMonth' => $displayMonth], $monthData);
+    }
+
+    //カリキュラム取得
+    private function getCurriculums(int $gradeId, Carbon $start, Carbon $end)
+    {
+        return Curriculum::forGradeAndMonth($gradeId, $start, $end)->get();
+    }
+
+    //配信時間取得 全配信時間（今後の処理で使うなら）
+    private function getDeliveryTimes()
+    {
+        return DeliveryTime::all();
+    }
+    
+    // 色クラス取得
+    private function getColorClass(int $gradeId): string
+    {
+        return 'grade-color-' . $this->getColorGroupByGradeId($gradeId);
+    }
+
+    private function enrichCurriculumsWithDeliveryTimes($curriculums)
+    {
+        foreach ($curriculums as $curriculum) {
+            $formatted = [];
+
+            if (!empty($curriculum->deliveryTime)) {
+                foreach ($curriculum->deliveryTime as $delivery) {
+                    $from = Carbon::parse($delivery->delivery_from);
+                    $to = Carbon::parse($delivery->delivery_to);
+
+                    while ($from->lte($to)) {
+                        $dayStart = $from->copy()->startOfDay();
+                        $dayEnd = $from->copy()->endOfDay();
+                        $startTime = $from->greaterThan($dayStart) ? $from : $dayStart;
+                        $endTime = $to->lessThan($dayEnd) ? $to : $dayEnd;
+
+                        $formatted[] = [
+                            'start' => $startTime,
+                            'end' => $endTime,
+                        ];
+
+                        $from = $from->copy()->addDay()->startOfDay();
+                    }   
+                }
+            }
+
+            $curriculum->formattedDeliveries = $formatted;
+        }
+
+        return $curriculums;
+    }
+
+    //カリキュラム一覧ページ表示
+    public function showCurriculumList(Request $request)
+    {
+        $grades = $this->getGrades();
+
+        //各学年に色クラスを追加
+        $grades = $grades->map(function($grade) {
+            $colorGroup = $this->getColorGroupByGradeId($grade->id);
+            $grade->colorClass = 'grade-color-' . $colorGroup;
+            return $grade;
+        });
+
+        $userGradeId = $this->getUserGradeId();
+        $activeGradeIds = $this->getActiveGradeIds($grades, $userGradeId);
+
+        $selectedGrade = $this->getSelectedGrade($grades, $activeGradeIds, $request->input('grade_id'));
+        $monthData = $this->getDisplayMonthData($request->input('month'));
+        $curriculums = $this->getCurriculums($selectedGrade->id, $monthData['start'], $monthData['end']);
+        $deliveryTimes = $this->getDeliveryTimes();
+
+        $selectedColorClass = $this->getColorClass($selectedGrade->id);
+
+        $curriculums = $this->getCurriculums($selectedGrade->id, $monthData['start'], $monthData['end']);
+        $curriculums = $this->enrichCurriculumsWithDeliveryTimes($curriculums);
+
+        return view('user.curriculum_list', [
+            'displayMonth' => $monthData['displayMonth'],
+            'grades' => $grades,
+            'curriculums' => $curriculums,
+            'delivery_times' => $deliveryTimes,
+            'selectedGrade' => $selectedGrade,
+            'activeGradeIds' => $activeGradeIds,
+            'prevMonth' => $monthData['prev'],
+            'nextMonth' => $monthData['next'],
+            'selectedColorClass' => $selectedColorClass,
+            'startOfMonth' => $monthData['start'],
+            'endOfMonth' => $monthData['end'],
+        ]);
+    }
+
+    //月切り替えHTML生成の専用関数
+    private function renderMonthSwitcher(Grade $selectedGrade, Carbon $displayMonth, array $monthData)
+    {
+        // 色クラスを計算
+        $selectedColorClass = $this->getColorClass($selectedGrade->id);
+
+        return view('user.month_switcher_partial', [
+            'selectedGrade' => $selectedGrade,
+            'displayMonth' => $displayMonth,
+            'prevMonth' => $monthData['prev'],
+            'nextMonth' => $monthData['next'],
+            'selectedColorClass' => $selectedColorClass, 
+        ])->render();
+    }
+
+    private function getMonthData(?string $monthStr): array
+    {
+        $displayMonth =$monthStr ? Carbon::parse($monthStr): Carbon::now();
+        return array_merge(['displayMonth' => $displayMonth], $this->getMonthBoundaries($displayMonth));
+    }
+
+    private function getCurriculumsForRequest(Request $request): array
     {
         $gradeId = $request->input('grade_id');
-        $month = $request->input('month');
+        $monthData = $this->getMonthData($request->input('month'));
+        $curriculums = $this->getCurriculums($gradeId, $monthData['start'], $monthData['end']);
+        $grade = Grade::find($gradeId);
 
-        // 月の期間設定
-        $displayMonth = $month ? Carbon::parse($month) : Carbon::now();
-        $startOfMonth = $displayMonth->copy()->startOfMonth();
-        $endOfMonth = $displayMonth->copy()->endOfMonth();
+        $curriculums = $this->enrichCurriculumsWithDeliveryTimes($curriculums);
 
-        // カリキュラム取得
-        $curriculums = Curriculum::with('deliveryTime')
-        ->where('grade_id', $gradeId)
-        ->where(function ($query) use ($startOfMonth, $endOfMonth) {
-            $query->where('alway_delivery_flg', true)
-                ->orWhereHas('deliveryTime', function ($q) use ($startOfMonth, $endOfMonth) {
-                    $q->whereBetween('delivery_from', [$startOfMonth, $endOfMonth])
-                        ->orWhereBetween('delivery_to', [$startOfMonth, $endOfMonth]);
-                });
-            })
-            ->get();
+        return compact('curriculums', 'grade', 'monthData');
+    }
+
+    //カリキュラム一覧（Ajax用）
+    public function showCurriculumListPartial(Request $request)
+    {
+        ['curriculums' => $curriculums, 'grade' => $selectedGrade, 'monthData' => $monthData] =
+            $this->getCurriculumsForRequest($request);
+
+        $displayMonth = $monthData['displayMonth']; 
 
         // ビューの一部だけ返す
         $html = view('user.curriculum_list_partial',  [
             'curriculums' => $curriculums,
-            'prevMonth' => $displayMonth->copy()->subMonth()->format('Y-m'),
-            'nextMonth' => $displayMonth->copy()->addMonth()->format('Y-m'),
             'displayMonth' => $displayMonth,
+            'prevMonth' => $monthData['prev'],
+            'nextMonth' => $monthData['next'],
         ])->render();
 
-        $selectedGrade = Grade::find($gradeId);
-
-        // 月切り替え部分のHTMLも生成する（部分テンプレートとして切り出している想定）
-        $monthSwitcherHtml = view('user.month_switcher_partial', [
-            'prevMonth' => $displayMonth->copy()->subMonth()->format('Y-m'),
-            'nextMonth' => $displayMonth->copy()->addMonth()->format('Y-m'),
-            'displayMonth' => $displayMonth,
-            'selectedGrade' => $selectedGrade,
-        ])->render();
+        $monthSwitcherHtml = $this->renderMonthSwitcher($selectedGrade, $displayMonth, $monthData);
 
         return response()->json([
             'html' => $html,
             'monthSwitcherHtml' => $monthSwitcherHtml,
         ]);
     }
+
+    //配信詳細表示
     public function showDelivery($id)
     {
         $curriculum = Curriculum::with('deliveryTime')->findOrFail($id);
